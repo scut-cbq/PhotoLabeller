@@ -1,0 +1,96 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+Properties properties = new Properties()
+properties.load(project.file('gradle.properties').newDataInputStream())
+def paramServerUrl = properties.getProperty('parameter_server_url')
+
+android {
+    def config = rootProject.extensions.getByName("ext")
+
+    compileSdkVersion config["compile_sdk"]
+
+    defaultConfig {
+        applicationId config["application_id"]
+        minSdkVersion config["min_sdk"]
+        targetSdkVersion config["target_sdk"]
+        versionCode config["version_code"]
+        versionName config["version_name"]
+        testInstrumentationRunner config["test_runner"]
+        multiDexEnabled true
+
+        buildConfigField "String", "BASE_URL", "\"${paramServerUrl}\""
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
+        androidTest.java.srcDirs += 'src/androidTest/kotlin'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/services/javax.imageio.spi.ImageReaderSpi'
+        exclude 'META-INF/services/javax.imageio.spi.ImageWriterSpi'
+        exclude 'META-INF/services/com.fasterxml.jackson.core.JsonFactory'
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+        exclude "org/bytedeco/javacpp/windows*/*"
+        exclude "org/bytedeco/javacpp/macos*/*"
+        pickFirst 'META-INF/maven/org.bytedeco.javacpp-presets/openblas/pom.properties'
+        pickFirst 'META-INF/maven/org.bytedeco.javacpp-presets/openblas/pom.xml'
+        pickFirst 'META-INF/maven/org.bytedeco.javacpp-presets/ffmpeg/pom.properties'
+        pickFirst 'META-INF/maven/org.bytedeco.javacpp-presets/ffmpeg/pom.xml'
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:mediarouter-v7:27.1.0'
+    def applicationDependencies = rootProject.ext.productionCode
+    def unitTestDependencies = rootProject.ext.unitTesting
+    def acceptanceTestDependencies = rootProject.ext.acceptanceTesting
+
+    implementation applicationDependencies.kotlin
+    implementation applicationDependencies.kotlinCoroutines
+    implementation applicationDependencies.kotlinCoroutinesAndroid
+
+    implementation applicationDependencies.appCompat
+    implementation applicationDependencies.constraintLayout
+    implementation applicationDependencies.design
+
+    implementation applicationDependencies.retrofit
+    implementation applicationDependencies.retrofit_logging
+    implementation applicationDependencies.gson
+    implementation applicationDependencies.picasso
+    implementation applicationDependencies.kapsule
+    implementation applicationDependencies.retrofitCoroutines
+
+    implementation project(path: ':base')
+    implementation project(path: ':domain')
+    implementation project(path: ':repository')
+    implementation project(path: ':trainer')
+    implementation project(path: ':datasource')
+
+    testImplementation unitTestDependencies.kotlin
+    testImplementation unitTestDependencies.kotlinTest
+    testImplementation unitTestDependencies.junit
+    testImplementation unitTestDependencies.mockito
+
+    androidTestImplementation acceptanceTestDependencies.testRunner
+    androidTestImplementation acceptanceTestDependencies.espressoCore
+}
